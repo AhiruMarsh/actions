@@ -1,0 +1,36 @@
+name: Release
+
+on:
+  workflow_call:
+
+jobs:
+  release:
+    runs-on: ubuntu-slim
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Set version
+        id: version
+        run: |
+          PREFIX="v$(date +'%Y.%-m')"
+          LATEST=$(git tag --list "${PREFIX}.*" | sort -t. -k3 -n | tail -n1)
+          if [ -z "$LATEST" ]; then
+            VERSION="${PREFIX}.0"
+          else
+            MINOR=$(echo "$LATEST" | awk -F. '{print $NF}')
+            VERSION="${PREFIX}.$((MINOR + 1))"
+          fi
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+
+      - name: Create tag and release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${{ steps.version.outputs.version }}" \
+            --title "${{ steps.version.outputs.version }}" \
+            --generate-notes
