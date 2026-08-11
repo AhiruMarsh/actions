@@ -52,6 +52,10 @@ name: Generate terraform docs
 
 on:
   pull_request:
+    paths:
+      - ".github/workflows/**.yml"
+      - ".github/workflows/**.yaml"
+      - "**.tf*"
 
 jobs:
   docs:
